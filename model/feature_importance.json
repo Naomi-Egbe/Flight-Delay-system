@@ -1,0 +1,42 @@
+[
+  {
+    "feature": "season",
+    "label": "Season",
+    "weight": 0.1228
+  },
+  {
+    "feature": "weather_condition",
+    "label": "Weather condition",
+    "weight": 0.1136
+  },
+  {
+    "feature": "visibility_km",
+    "label": "Visibility",
+    "weight": 0.101
+  },
+  {
+    "feature": "humidity_pct",
+    "label": "Humidity",
+    "weight": 0.0998
+  },
+  {
+    "feature": "wind_speed_kph",
+    "label": "Wind speed",
+    "weight": 0.0923
+  },
+  {
+    "feature": "temperature_c",
+    "label": "Temperature",
+    "weight": 0.0881
+  },
+  {
+    "feature": "month",
+    "label": "Month",
+    "weight": 0.0719
+  },
+  {
+    "feature": "departure_hour",
+    "label": "Time of departure",
+    "weight": 0.0704
+  }
+]

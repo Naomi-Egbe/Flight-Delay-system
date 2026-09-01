@@ -1,0 +1,43 @@
+{
+  "numeric_features": [
+    "departure_hour",
+    "flight_duration_min",
+    "distance_km",
+    "temperature_c",
+    "visibility_km",
+    "wind_speed_kph",
+    "humidity_pct",
+    "is_weekend",
+    "is_peak_hour",
+    "is_holiday_period",
+    "is_international"
+  ],
+  "categorical_features": [
+    "day_of_week",
+    "month",
+    "season",
+    "airline",
+    "flight_type",
+    "origin",
+    "destination",
+    "weather_condition"
+  ],
+  "classifier_metrics": {
+    "accuracy": 0.6155,
+    "precision": 0.5446,
+    "recall": 0.5824,
+    "f1": 0.5628,
+    "roc_auc": 0.654
+  },
+  "regressor_metrics": {
+    "mae_minutes": 17.26
+  },
+  "delay_category_bins": {
+    "No Delay": "0 min",
+    "Minor (15-30 min)": "15-30 min",
+    "Moderate (30-60 min)": "30-60 min",
+    "Major (60+ min)": "60+ min"
+  },
+  "trained_rows": 10000,
+  "random_state": 42
+}

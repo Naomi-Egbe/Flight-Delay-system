@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAAN Airline Delay-Predict | Akanu Ibiam International Airport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg: #0A150F;
+    --bg-panel: #122A1D;
+    --bg-panel-2: #0F2418;
+    --bg-elevated: #1A3826;
+    --hover-dark: #08120C;
+    --green: #1FA35C;
+    --green-hover: #188A4C;
+    --green-dim: rgba(31,163,92,0.34);
+    --green-bg: rgba(31,163,92,0.12);
+    --amber: #E3A857;
+    --amber-bg: rgba(227,168,87,0.1);
+    --red: #D97B7B;
+    --red-bg: rgba(217,123,123,0.1);
+    --slate: #6E8878;
+    --text: #EAF2EC;
+    --text-dim: #8FAE9C;
+    --line: rgba(150,196,170,0.14);
+    --radius: 4px;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{ background: var(--bg); color: var(--text); font-family:'IBM Plex Sans', sans-serif; line-height:1.5; }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; font-weight:600; letter-spacing:-0.01em; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:inherit; cursor:pointer; }
+  input, select{ font-family:inherit; }
+  ::selection{ background: var(--green-dim); }
+
+  /* ============ LOGIN SCREEN ============ */
+  #screen-login{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; padding:24px;
+    background-image: linear-gradient(180deg, rgba(10,21,15,0.88), rgba(10,21,15,0.95)), url('https://commons.wikimedia.org/wiki/Special:FilePath/Boeing_747_Runway_24R_Takeoff-LAX.jpg');
+    background-size: cover; background-position: center;
+  }
+  .radar-bg{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:900px; height:900px; opacity:0.16; z-index:0; }
+  .radar-ring{ fill:none; stroke:var(--green); stroke-opacity:0.4; }
+  .radar-crosshair{ stroke:var(--green); stroke-opacity:0.3; }
+  .sweep{ transform-origin:450px 450px; animation: rotate 8s linear infinite; }
+  @keyframes rotate{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  .blip{ fill:var(--green); filter: drop-shadow(0 0 3px var(--green)); }
+
+  .login-card{ position:relative; z-index:2; width:100%; max-width:400px; background: rgba(22,32,47,0.92); backdrop-filter: blur(6px); border:1px solid var(--line); border-radius:8px; padding: 36px 34px; }
+  .login-brand{ display:flex; align-items:center; gap:10px; margin-bottom:24px; }
+  .login-brand .dot{ width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation: blink 2.6s infinite; }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.45;} }
+  .login-brand span{ font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; letter-spacing:0.02em; }
+
+  .login-tabs{ display:flex; gap:4px; background: var(--bg-panel-2); border-radius:6px; padding:4px; margin-bottom:24px; }
+  .login-tab{ flex:1; text-align:center; padding:9px; border-radius:5px; font-family:'IBM Plex Mono'; font-size:12px; color:var(--text-dim); transition: all 0.15s ease; }
+  .login-tab.active{ background: var(--green); color:#08281A; font-weight:600; }
+
+  .login-card h1{ font-size:21px; margin-bottom:6px; }
+  .login-card p.sub{ color:var(--text-dim); font-size:13px; margin-bottom:26px; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; font-family:'IBM Plex Mono'; }
+  .field input, .field select{ width:100%; background: var(--bg-panel-2); border:1px solid var(--line); border-radius: var(--radius); color:var(--text); padding:12px 14px; font-size:14px; outline:none; transition: border-color 0.15s ease; }
+  .field input:focus, .field select:focus{ border-color: var(--green-dim); }
+  .field input::placeholder{ color: var(--slate); }
+
+  .btn{ font-family:'IBM Plex Mono'; font-size:13px; letter-spacing:0.02em; padding:12px 22px; border-radius:var(--radius); border:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition: all 0.15s ease; }
+  .btn-primary{ background:var(--green); color:#08281A; font-weight:600; }
+  .btn-primary:hover{ background:var(--green-hover); color:#EAF3F8; }
+  .btn-ghost{ border:1px solid var(--line); color:var(--text); background:transparent; }
+  .btn-ghost:hover{ background:var(--hover-dark); border-color:var(--green-dim); }
+  .btn-block{ width:100%; }
+  .btn-sm{ padding:8px 14px; font-size:12px; }
+  .btn-danger{ background: var(--red-bg); color: var(--red); border:1px solid rgba(217,123,123,0.3); }
+  .btn-danger:hover{ background:#2a1414; }
+
+  .login-hint{ margin-top:16px; font-size:11px; color:var(--slate); text-align:center; font-family:'IBM Plex Mono'; line-height:1.7; }
+  .error-msg{ color:var(--red); font-size:12px; margin-top:-6px; margin-bottom:14px; display:none; }
+  .success-msg{ color:var(--green); font-size:12px; margin-top:-6px; margin-bottom:14px; display:none; }
+  .auth-panel{ display:none; }
+  .auth-panel.active{ display:block; }
+
+  /* ============ APP SHELL ============ */
+  #app{ display:none; min-height:100vh; padding-bottom:44px; }
+  .topbar{ height:64px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 28px; position:sticky; top:0; background: rgba(10,21,15,0.94); backdrop-filter: blur(10px); z-index:40; }
+  .topbar-brand{ display:flex; align-items:center; gap:10px; }
+  .topbar-brand .dot{ width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation: blink 2.6s infinite; }
+  .topbar-brand span{ font-family:'Space Grotesk'; font-weight:700; font-size:13.5px; }
+  .topbar-right{ display:flex; align-items:center; gap:16px; position:relative; }
+  .icao{ font-size:11px; color:var(--text-dim); font-family:'IBM Plex Mono'; letter-spacing:0.06em; }
+
+  .menu-btn{ width:40px; height:40px; border-radius:var(--radius); background: var(--bg-panel); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; transition: all 0.15s ease; }
+  .menu-btn:hover{ background: var(--hover-dark); border-color: var(--green-dim); }
+  .menu-btn span{ display:block; width:16px; height:2px; background: var(--text); border-radius:2px; transition: all 0.2s ease; }
+  .menu-btn.open span:nth-child(1){ transform: translateY(6px) rotate(45deg); }
+  .menu-btn.open span:nth-child(2){ opacity:0; }
+  .menu-btn.open span:nth-child(3){ transform: translateY(-6px) rotate(-45deg); }
+
+  .dropdown-menu{ position:absolute; top:52px; right:0; width:250px; background: var(--bg-panel); border:1px solid var(--line); border-radius:8px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); padding:8px; display:none; z-index:50; max-height:80vh; overflow-y:auto; }
+  .dropdown-menu.open{ display:block; }
+  .dropdown-user{ display:flex; align-items:center; gap:10px; padding:12px 10px; border-bottom:1px solid var(--line); margin-bottom:8px; }
+  .avatar{ width:34px; height:34px; border-radius:50%; background:var(--green-bg); color:var(--green); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono'; font-weight:600; font-size:12px; border:1px solid var(--green-dim); flex-shrink:0; }
+  .dropdown-user .uname{ font-size:13px; font-weight:500; }
+  .dropdown-user .urole{ font-size:11px; color:var(--text-dim); }
+
+  .nav-item{ display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius: var(--radius); font-size:13.5px; color:var(--text-dim); margin-bottom:2px; transition: all 0.15s ease; }
+  .nav-item:hover{ background: var(--hover-dark); color: var(--text); }
+  .nav-item.active{ background: var(--green-bg); color: var(--green); }
+  .nav-item .ic{ width:16px; text-align:center; font-family:'IBM Plex Mono'; font-size:13px; }
+  .dropdown-divider{ height:1px; background: var(--line); margin:8px 0; }
+
+  .content{ padding:32px 28px; max-width:1180px; margin:0 auto; }
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  .home-hero{ margin-bottom:28px; }
+  .home-hero h1{ font-size:25px; margin-bottom:6px; }
+  .home-hero p{ color:var(--text-dim); font-size:14px; }
+
+  /* ---------- CAROUSEL (real photos) ---------- */
+  .carousel-wrap{ position:relative; margin-bottom:32px; }
+  .carousel-track{ display:flex; gap:16px; overflow-x:auto; scroll-behavior:smooth; scroll-snap-type: x mandatory; padding-bottom:6px; scrollbar-width:none; }
+  .carousel-track::-webkit-scrollbar{ display:none; }
+  .photo-card{ position:relative; flex:0 0 300px; height:210px; border-radius:8px; overflow:hidden; border:1px solid var(--line); scroll-snap-align:start; cursor:pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
+  .photo-card:hover{ transform: translateY(-3px); border-color: var(--green-dim); }
+  .photo-card img{ width:100%; height:100%; object-fit:cover; display:block; filter: saturate(0.9) brightness(0.85); }
+  .photo-card .pc-overlay{ position:absolute; inset:0; background: linear-gradient(180deg, transparent 40%, rgba(10,16,26,0.92) 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:14px 16px; }
+  .photo-card .pc-tag{ font-family:'IBM Plex Mono'; font-size:10px; letter-spacing:0.08em; color: var(--green); text-transform:uppercase; margin-bottom:4px; }
+  .photo-card .pc-news{ font-size:12.5px; color: var(--text); line-height:1.4; }
+
+  .airline-card{ flex:0 0 170px; height:210px; border-radius:8px; border:1px solid var(--line); background: var(--bg-panel); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; scroll-snap-align:start; cursor:pointer; transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease; }
+  .airline-card:hover{ transform: translateY(-3px); border-color: var(--green-dim); background: var(--bg-elevated); }
+  .airline-card svg{ width:60px; height:36px; }
+  .airline-card .a-name{ font-family:'Space Grotesk'; font-weight:600; font-size:13.5px; text-align:center; padding:0 12px; }
+  .airline-card .a-hint{ font-family:'IBM Plex Mono'; font-size:10px; color:var(--text-dim); }
+
+  .carousel-controls{ display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+  .carousel-btn{ width:36px; height:36px; border-radius:50%; background: var(--bg-panel); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--text); transition: all 0.15s ease; }
+  .carousel-btn:hover{ background: var(--hover-dark); border-color: var(--green-dim); }
+
+  .news-section{ margin-bottom:32px; }
+  .news-header{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .live-tag{ display:inline-flex; align-items:center; gap:6px; background: var(--red-bg); color: var(--red); border:1px solid rgba(217,123,123,0.3); border-radius:999px; padding:4px 10px; font-family:'IBM Plex Mono'; font-size:10.5px; font-weight:600; letter-spacing:0.06em; }
+  .live-tag .pulse{ width:6px; height:6px; border-radius:50%; background: var(--red); animation: pulse 1.8s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .flash-banner{ background: var(--bg-panel); border:1px solid var(--green-dim); border-radius:6px; padding:16px 20px; margin-bottom:14px; display:flex; align-items:center; gap:14px; transition: opacity 0.25s ease; }
+  .flash-banner .flash-ic{ color: var(--green); font-size:16px; }
+  .flash-banner .flash-text{ font-size:13.5px; }
+  .flash-banner .flash-time{ margin-left:auto; font-family:'IBM Plex Mono'; font-size:11px; color:var(--text-dim); white-space:nowrap; }
+
+  .headline-list{ display:flex; flex-direction:column; gap:10px; }
+  .headline-item{ display:flex; gap:14px; padding:14px 16px; background: var(--bg-panel); border:1px solid var(--line); border-radius:6px; align-items:flex-start; }
+  .headline-item .tag{ font-family:'IBM Plex Mono'; font-size:10px; font-weight:600; letter-spacing:0.05em; padding:3px 8px; border-radius:4px; flex-shrink:0; margin-top:2px; }
+  .tag-takeoff{ background: var(--green-bg); color: var(--green); }
+  .tag-landing{ background: rgba(122,162,201,0.12); color:#8fb3d6; }
+  .tag-comfort{ background: var(--amber-bg); color: var(--amber); }
+  .headline-item .htext{ font-size:13px; color: var(--text-dim); }
+  .headline-item .htext strong{ color: var(--text); font-weight:500; }
+
+  .stats-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-bottom:32px; }
+  .stat-card{ background: var(--bg-panel); border:1px solid var(--line); border-radius:6px; padding:20px; }
+  .stat-card .n{ font-family:'IBM Plex Mono'; font-size:24px; font-weight:600; }
+  .stat-card .l{ font-size:12px; color:var(--text-dim); margin-top:6px; }
+  @media (max-width:900px){ .stats-grid{ grid-template-columns: repeat(2,1fr); } }
+
+  .card{ background: var(--bg-panel); border:1px solid var(--line); border-radius:6px; padding:24px; margin-bottom:24px; }
+  .card h3{ font-size:15px; margin-bottom:16px; }
+
+  .form-grid{ display:grid; grid-template-columns: repeat(2,1fr); gap:16px; }
+  @media (max-width:700px){ .form-grid{ grid-template-columns:1fr; } }
+
+  #check-result, #booking-result{ display:none; }
+  .result-badge{ display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border-radius:999px; font-family:'IBM Plex Mono'; font-size:13px; font-weight:600; letter-spacing:0.04em; margin-bottom:16px; }
+  .badge-ontime{ background: var(--green-bg); color: var(--green); border:1px solid var(--green-dim); }
+  .badge-delayed{ background: var(--amber-bg); color: var(--amber); border:1px solid rgba(227,168,87,0.3); }
+  .badge-cancelled{ background: var(--red-bg); color: var(--red); border:1px solid rgba(217,123,123,0.3); }
+  .badge-booked{ background: var(--green-bg); color: var(--green); border:1px solid var(--green-dim); }
+
+  .result-meta{ display:flex; gap:28px; flex-wrap:wrap; margin-bottom:18px; }
+  .result-meta div .v{ font-family:'IBM Plex Mono'; font-size:18px; font-weight:600; }
+  .result-meta div .l{ font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+
+  .reason-list{ list-style:none; margin-bottom:18px; }
+  .reason-list li{ font-size:13px; color:var(--text-dim); padding:6px 0; padding-left:18px; position:relative; }
+  .reason-list li::before{ content:"—"; position:absolute; left:0; color:var(--slate); }
+  .result-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .strips{ display:flex; flex-direction:column; gap:10px; }
+  .strip{ display:grid; grid-template-columns: 100px 1fr 130px 140px auto; align-items:center; gap:16px; background: var(--bg-panel); border:1px solid var(--line); border-left:4px solid var(--slate); border-radius: var(--radius); padding:16px 18px; font-family:'IBM Plex Mono'; font-size:12.5px; }
+  .strip.ontime{ border-left-color: var(--green); }
+  .strip.delayed{ border-left-color: var(--amber); }
+  .strip.cancelled{ border-left-color: var(--red); }
+  .strip.rescheduled{ border-left-color: #8fb3d6; }
+  .strip.booked{ border-left-color: var(--green); }
+  .strip .flightno{ font-weight:600; color:var(--text); }
+  .strip .route{ color:var(--text-dim); }
+  .strip .route b{ color:var(--text); font-weight:500; }
+  .status-ontime{ color:var(--green); }
+  .status-delayed{ color:var(--amber); }
+  .status-cancelled{ color:var(--red); }
+  .status-rescheduled{ color:#8fb3d6; }
+  .status-booked{ color:var(--green); }
+  @media (max-width:800px){ .strip{ grid-template-columns: 1fr 1fr; row-gap:8px; } }
+
+  .empty-state{ text-align:center; padding:48px 20px; color:var(--text-dim); font-size:13.5px; }
+
+  .profile-card{ display:flex; align-items:center; gap:18px; margin-bottom:24px; }
+  .profile-avatar{ width:64px; height:64px; border-radius:50%; background:var(--green-bg); color:var(--green); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono'; font-weight:700; font-size:20px; border:1px solid var(--green-dim); flex-shrink:0; }
+  .profile-name{ font-size:18px; margin-bottom:2px; }
+  .profile-role{ font-size:12.5px; color:var(--text-dim); }
+  .detail-row{ display:flex; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .detail-row:last-child{ border-bottom:none; }
+  .detail-row .dl{ color: var(--text-dim); }
+  .detail-row .dv{ font-family:'IBM Plex Mono'; }
+
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(8,12,20,0.75); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .modal{ background: var(--bg-panel); border:1px solid var(--line); border-radius:8px; padding:28px; width:100%; max-width:460px; }
+  .modal h3{ font-size:16px; margin-bottom:6px; }
+  .modal p.sub{ font-size:12.5px; color:var(--text-dim); margin-bottom:20px; }
+  .slot-option{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:8px; cursor:pointer; transition: all 0.15s ease; }
+  .slot-option:hover{ border-color: var(--green-dim); background: var(--hover-dark); }
+  .slot-option.selected{ border-color: var(--green); background: var(--green-bg); }
+  .slot-option .t{ font-family:'IBM Plex Mono'; font-size:13.5px; font-weight:600; }
+  .slot-option .d{ font-size:11px; color: var(--text-dim); }
+  .modal-actions{ display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+  #toast{ position:fixed; bottom:56px; right:24px; background: var(--bg-elevated); border:1px solid var(--green-dim); color: var(--text); padding:14px 20px; border-radius: var(--radius); font-size:13px; z-index:200; display:none; align-items:center; gap:10px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  #toast .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); }
+
+  .float-bar{ position:fixed; left:0; right:0; bottom:0; height:38px; background: #090E16; border-top:1px solid var(--line); overflow:hidden; z-index:60; display:flex; align-items:center; }
+  .float-bar .marquee-text{ position:absolute; white-space:nowrap; font-family:'IBM Plex Mono'; font-weight:700; font-size:12.5px; letter-spacing:0.1em; color: var(--green); animation: marquee-slide 16s linear infinite; }
+  @keyframes marquee-slide{ from{ transform: translateX(100vw); } to{ transform: translateX(-100%); } }
+
+  /* floating home button */
+  .fab-home{
+    position:fixed; left:26px; bottom:66px; z-index:70;
+    display:none; align-items:center; gap:10px;
+    background: var(--green); color:#08281A; border:none; border-radius:999px;
+    padding:13px 20px 13px 16px; font-family:'IBM Plex Mono'; font-size:12.5px; font-weight:700; letter-spacing:0.03em;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    transition: all 0.2s ease;
+  }
+  .fab-home:hover{ background: var(--green-hover); color:#EAF3F8; transform: translateY(-3px); box-shadow: 0 14px 32px rgba(0,0,0,0.45); }
+  .fab-home .fab-ic{ width:26px; height:26px; border-radius:50%; background: rgba(13,34,51,0.16); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .fab-home:hover .fab-ic{ background: rgba(234,243,248,0.18); }
+
+  .skip-link:focus{ position:fixed; top:8px; left:8px; background:var(--green); color:#08281A; padding:8px 14px; border-radius:4px; z-index:999; }
+  .visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+  .helper-note{ font-size:12px; color:var(--text-dim); margin-top:10px; }
+
+
+/* ============ TAKEOFF ANIMATION (login screen) ============ */
+.takeoff-scene{
+  position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none;
+}
+.runway-line{
+  position:absolute; left:-5%; right:-5%; bottom:17%;
+  height:2px;
+  background: repeating-linear-gradient(to right, rgba(234,242,236,0.35) 0px, rgba(234,242,236,0.35) 26px, transparent 26px, transparent 52px);
+  opacity:0.5;
+}
+.takeoff-plane{
+  position:absolute;
+  bottom:17.5%;
+  left:-12%;
+  width:74px;
+  filter: drop-shadow(0 0 5px rgba(31,163,92,0.55));
+  animation: plane-takeoff 8s cubic-bezier(0.45,0.05,0.55,0.95) infinite;
+}
+.takeoff-plane svg{ display:block; width:100%; height:auto; }
+.takeoff-trail{
+  position:absolute;
+  bottom:17.5%;
+  left:-12%;
+  width:2px;
+  height:2px;
+  border-radius:50%;
+  background: var(--green);
+  box-shadow: 0 0 8px 2px rgba(31,163,92,0.6);
+  animation: trail-fade 8s cubic-bezier(0.45,0.05,0.55,0.95) infinite;
+}
+@keyframes plane-takeoff{
+  0%    { left:-12%; bottom:17.5%; transform: rotate(0deg);   opacity:0; }
+  8%    { opacity:1; }
+  55%   { left:58%;  bottom:52%;   transform: rotate(-16deg); opacity:1; }
+  85%   { left:98%;  bottom:78%;   transform: rotate(-20deg); opacity:1; }
+  100%  { left:118%; bottom:88%;   transform: rotate(-20deg); opacity:0; }
+}
+@keyframes trail-fade{
+  0%   { opacity:0; }
+  8%   { opacity:0.7; }
+  100% { opacity:0; }
+}
+.cloud{
+  position:absolute;
+  background: rgba(234,242,236,0.05);
+  border-radius:50%;
+  filter: blur(2px);
+}
+.cloud--1{ width:140px; height:40px; top:22%; left:10%; animation: drift 22s linear infinite; }
+.cloud--2{ width:100px; height:30px; top:38%; left:60%; animation: drift 28s linear infinite reverse; }
+.cloud--3{ width:170px; height:46px; top:65%; left:30%; animation: drift 34s linear infinite; }
+@keyframes drift{
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(60px); }
+}
+
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<section id="screen-login">
+  <svg class="radar-bg" viewBox="0 0 900 900" aria-hidden="true">
+    <circle class="radar-ring" cx="450" cy="450" r="150"/>
+    <circle class="radar-ring" cx="450" cy="450" r="280"/>
+    <circle class="radar-ring" cx="450" cy="450" r="400"/>
+    <line class="radar-crosshair" x1="50" y1="450" x2="850" y2="450"/>
+    <line class="radar-crosshair" x1="450" y1="50" x2="450" y2="850"/>
+    <g class="sweep"><path d="M450 450 L450 50 A400 400 0 0 1 733 171 Z" fill="url(#g1)" opacity="0.5"/></g>
+    <defs><linearGradient id="g1" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#1FA35C" stop-opacity="0"/><stop offset="100%" stop-color="#1FA35C" stop-opacity="0.4"/></linearGradient></defs>
+  </svg>
+
+  <div class="takeoff-scene" aria-hidden="true">
+    <div class="cloud cloud--1"></div>
+    <div class="cloud cloud--2"></div>
+    <div class="cloud cloud--3"></div>
+    <div class="runway-line"></div>
+    <div class="takeoff-trail"></div>
+    <div class="takeoff-plane">
+      <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none" stroke="#1FA35C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 40 L70 40 L88 30 L70 34 L45 20 L38 22 L52 36 L28 38 L18 32 L12 34 L20 40"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-brand"><span class="dot" aria-hidden="true"></span><span>FAAN AIRLINE DELAY-PREDICT</span></div>
+
+    <!-- SIGN IN -->
+    <div class="auth-panel active" id="auth-signin">
+      <h1>Welcome back</h1>
+      <p class="sub">Akanu Ibiam International Airport &middot; Enugu, Nigeria</p>
+      <form id="login-form" novalidate>
+        <div class="field"><label for="login-name">Full name</label><input type="text" id="login-name" placeholder="Naomi Chukwu" required></div>
+        <div class="field"><label for="login-email">Email address</label><input type="email" id="login-email" placeholder="naomi.ops@aiia-enu.ng" required></div>
+        <div class="field"><label for="login-pass">Passcode</label><input type="password" id="login-pass" placeholder="••••••••" required></div>
+        <p class="error-msg" id="login-error" role="alert">Incorrect credentials. Check the demo login details below, or sign up.</p>
+        <button type="submit" class="btn btn-primary btn-block">Log In</button>
+        <button type="button" class="btn btn-ghost btn-block" id="show-signup-btn" style="margin-top:10px;">Sign Up</button>
+        <button type="button" class="btn btn-ghost btn-block" id="show-forgot-btn" style="margin-top:10px;">Forgot Passcode?</button>
+      </form>
+      <p class="login-hint">Demo login<br>Name: <strong>Naomi Chukwu</strong> &middot; Email: <strong>naomi.ops@aiia-enu.ng</strong><br>Passcode: <strong>AIIA2026#</strong></p>
+    </div>
+
+    <!-- SIGN UP -->
+    <div class="auth-panel" id="auth-signup">
+      <h1>Create your profile</h1>
+      <p class="sub">Register once, then sign in with these details.</p>
+      <form id="signup-form" novalidate>
+        <div class="field"><label for="signup-name">Full name</label><input type="text" id="signup-name" placeholder="e.g. Chidi Obi" required></div>
+        <div class="field"><label for="signup-email">Email address</label><input type="email" id="signup-email" placeholder="you@example.com" required></div>
+        <div class="field"><label for="signup-pass">Create passcode</label><input type="password" id="signup-pass" placeholder="Min. 4 characters" required minlength="4"></div>
+        <p class="error-msg" id="signup-error" role="alert">Please fill in all fields correctly.</p>
+        <p class="success-msg" id="signup-success" role="status">Profile created — you can now sign in with these details.</p>
+        <button type="submit" class="btn btn-primary btn-block">Create Profile</button>
+        <button type="button" class="btn btn-ghost btn-block" id="show-signin-btn" style="margin-top:10px;">← Back to Sign In</button>
+      </form>
+      <p class="login-hint">Profiles created here last for this session only.</p>
+    </div>
+
+    <!-- FORGOT PASSCODE -->
+    <div class="auth-panel" id="auth-forgot">
+      <h1>Reset your passcode</h1>
+      <p class="sub">Enter the email on your profile and we'll send reset instructions.</p>
+      <form id="forgot-form" novalidate>
+        <div class="field"><label for="forgot-email">Email address</label><input type="email" id="forgot-email" placeholder="you@example.com" required></div>
+        <p class="error-msg" id="forgot-error" role="alert">Please enter a valid email address.</p>
+        <p class="success-msg" id="forgot-success" role="status">If this email is registered, reset instructions have been sent.</p>
+        <button type="submit" class="btn btn-primary btn-block">Send Reset Instructions</button>
+        <button type="button" class="btn btn-ghost btn-block" id="show-signin-btn-2" style="margin-top:10px;">← Back to Log In</button>
+      </form>
+      <p class="login-hint">This is a demo system — no email is actually sent. Use the demo passcode <strong>AIIA2026#</strong>, or your own if you created a profile.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand"><span class="dot" aria-hidden="true"></span><span>FAAN AIRLINE DELAY-PREDICT</span></div>
+    <div class="topbar-right">
+      <div class="icao">AKANU IBIAM INTL · ENU</div>
+      <button class="menu-btn" id="menu-toggle" aria-label="Open navigation menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <div class="dropdown-menu" id="dropdown-menu">
+        <div class="dropdown-user">
+          <div class="avatar" id="user-avatar">NC</div>
+          <div><div class="uname" id="user-name">—</div><div class="urole">Airport Ops · ENU</div></div>
+        </div>
+        <a href="#" class="nav-item active" data-panel="home"><span class="ic">⌂</span> Home</a>
+        <a href="#" class="nav-item" data-panel="check"><span class="ic">◎</span> Check Flight</a>
+        <a href="#" class="nav-item" data-panel="book"><span class="ic">✎</span> Book Flight</a>
+        <a href="#" class="nav-item" data-panel="myflights"><span class="ic">☰</span> My Flights</a>
+        <a href="#" class="nav-item" data-panel="mybookings"><span class="ic">▤</span> My Bookings</a>
+        <a href="#" class="nav-item" data-panel="airlines"><span class="ic">✈</span> Airlines &amp; Routes</a>
+        <a href="#" class="nav-item" data-panel="profile"><span class="ic">◐</span> Profile</a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="nav-item" id="logout-btn"><span class="ic">⏻</span> Log out</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="main-content">
+    <div class="content">
+
+      <!-- HOME PANEL -->
+      <section class="panel active" id="panel-home">
+        <div class="home-hero">
+          <h1>Welcome back<span id="home-username">.</span></h1>
+          <p>Live overview of flight predictions, airport activity, and route performance at ENU.</p>
+        </div>
+
+        <div class="carousel-wrap">
+          <div class="carousel-track" id="carousel-track"></div>
+        </div>
+
+        <div class="news-section">
+          <div class="news-header"><span class="live-tag"><span class="pulse"></span> LIVE UPDATES</span></div>
+          <div class="flash-banner">
+            <span class="flash-ic">✈</span>
+            <span class="flash-text" id="flash-rotator">Flight AP 118 took off successfully from ENU — climb-out normal.</span>
+            <span class="flash-time" id="flash-time">just now</span>
+          </div>
+          <div class="headline-list" id="headline-list"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="n" id="stat-total">0</div><div class="l">Flights checked</div></div>
+          <div class="stat-card"><div class="n" id="stat-ontime">0</div><div class="l">On-time</div></div>
+          <div class="stat-card"><div class="n" id="stat-delayed">0</div><div class="l">Delayed</div></div>
+          <div class="stat-card"><div class="n" id="stat-bookings">0</div><div class="l">Bookings</div></div>
+        </div>
+
+        <div class="card">
+          <h3>Recent activity</h3>
+          <div class="strips" id="recent-strips"></div>
+          <div class="empty-state" id="overview-empty">No flights checked yet. Use the menu to open <strong>Check Flight</strong>.</div>
+        </div>
+      </section>
+
+      <!-- CHECK FLIGHT PANEL -->
+      <section class="panel" id="panel-check">
+        <div class="card">
+          <h3>Check flight delay risk</h3>
+          <form id="check-form">
+            <div class="form-grid">
+              <div class="field">
+                <label for="f-airline">Airline</label>
+                <select id="f-airline" required><option value="">Select airline</option></select>
+              </div>
+              <div class="field"><label for="f-flightno">Flight number (optional)</label><input type="text" id="f-flightno" placeholder="e.g. UN 402"></div>
+              <div class="field"><label for="f-from">Departure (state)</label><select id="f-from" required><option value="">Select airline first</option></select></div>
+              <div class="field"><label for="f-to">Arrival (state)</label><select id="f-to" required><option value="">Select airline first</option></select></div>
+              <div class="field"><label for="f-date">Travel date</label><input type="date" id="f-date" required></div>
+              <div class="field"><label for="f-time">Scheduled time</label><input type="time" id="f-time" required></div>
+            </div>
+            <p class="error-msg" id="check-error" role="alert">Please complete all required fields — departure and arrival must be different.</p>
+            <button type="submit" class="btn btn-primary">Predict Delay Status →</button>
+          </form>
+        </div>
+
+        <div class="card" id="check-result">
+          <div id="result-badge-wrap"></div>
+          <div class="result-meta" id="result-meta"></div>
+          <h3 style="font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:10px;">Contributing factors</h3>
+          <ul class="reason-list" id="result-reasons"></ul>
+          <div class="result-actions">
+            <button class="btn btn-ghost" id="save-flight-btn">+ Add to My Flights</button>
+            <button class="btn btn-danger" id="reschedule-inline-btn" style="display:none;">Reschedule this flight</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOOK FLIGHT PANEL -->
+      <section class="panel" id="panel-book">
+        <div class="card">
+          <h3>Book a flight</h3>
+          <form id="book-form">
+            <div class="form-grid">
+              <div class="field"><label for="b-airline">Airline</label><select id="b-airline" required><option value="">Select airline</option></select></div>
+              <div class="field"><label for="b-passenger">Passenger full name</label><input type="text" id="b-passenger" placeholder="As on ID" required></div>
+              <div class="field"><label for="b-from">Departure (state)</label><select id="b-from" required><option value="">Select airline first</option></select></div>
+              <div class="field"><label for="b-to">Arrival (state)</label><select id="b-to" required><option value="">Select airline first</option></select></div>
+              <div class="field"><label for="b-date">Travel date</label><input type="date" id="b-date" required></div>
+              <div class="field"><label for="b-time">Preferred time</label><input type="time" id="b-time" required></div>
+            </div>
+            <p class="error-msg" id="book-error" role="alert">Please complete all required fields — departure and arrival must be different.</p>
+            <button type="submit" class="btn btn-primary">Book Flight →</button>
+          </form>
+        </div>
+
+        <div class="card" id="booking-result">
+          <div class="result-badge badge-booked" id="booking-badge">● BOOKING CONFIRMED</div>
+          <div class="result-meta" id="booking-meta"></div>
+          <p class="helper-note">Your booking reference has been added to <strong>My Bookings</strong>. Show this reference at check-in.</p>
+        </div>
+      </section>
+
+      <!-- MY FLIGHTS PANEL -->
+      <section class="panel" id="panel-myflights">
+        <div class="card">
+          <h3>My flights</h3>
+          <div class="strips" id="myflights-strips"></div>
+          <div class="empty-state" id="myflights-empty">You haven't checked any flights yet.</div>
+        </div>
+      </section>
+
+      <!-- MY BOOKINGS PANEL -->
+      <section class="panel" id="panel-mybookings">
+        <div class="card">
+          <h3>My bookings</h3>
+          <div class="strips" id="bookings-strips"></div>
+          <div class="empty-state" id="bookings-empty">You haven't booked any flights yet.</div>
+        </div>
+      </section>
+
+      <!-- AIRLINES PANEL -->
+      <!-- SEPARATE AIRPORT INFO PANELS (independent, not linked together) -->
+      <section class="panel" id="panel-info-departure">
+        <div class="card"><h3>Departures</h3><div class="headline-list" id="info-departure-list"></div></div>
+      </section>
+      <section class="panel" id="panel-info-arrival">
+        <div class="card"><h3>Arrivals</h3><div class="headline-list" id="info-arrival-list"></div></div>
+      </section>
+      <section class="panel" id="panel-info-runway">
+        <div class="card"><h3>Runway</h3><div class="headline-list" id="info-runway-list"></div></div>
+      </section>
+      <section class="panel" id="panel-info-tower">
+        <div class="card"><h3>Control Tower</h3><div class="headline-list" id="info-tower-list"></div></div>
+      </section>
+      <section class="panel" id="panel-info-ground">
+        <div class="card"><h3>Ground Crew</h3><div class="headline-list" id="info-ground-list"></div></div>
+      </section>
+      <section class="panel" id="panel-info-terminal">
+        <div class="card"><h3>Terminal</h3><div class="headline-list" id="info-terminal-list"></div></div>
+      </section>
+
+      <section class="panel" id="panel-airlines">
+        <div class="card">
+          <h3>Airlines operating at Akanu Ibiam Intl. (ENU)</h3>
+          <p class="helper-note" style="margin-bottom:16px;">Based on current route research — only carriers confirmed to operate at ENU are listed.</p>
+          <div class="strips" id="airlines-strips"></div>
+        </div>
+        <div class="card">
+          <h3>States each airline serves from ENU</h3>
+          <div id="airline-routes-list"></div>
+        </div>
+      </section>
+
+      <!-- PROFILE PANEL -->
+      <section class="panel" id="panel-profile">
+        <div class="card">
+          <div class="profile-card">
+            <div class="profile-avatar" id="profile-avatar">NC</div>
+            <div><div class="profile-name" id="profile-name">—</div><div class="profile-role">Akanu Ibiam International Airport</div></div>
+          </div>
+          <div class="detail-row"><span class="dl">Full name</span><span class="dv" id="profile-detail-name">—</span></div>
+          <div class="detail-row"><span class="dl">Email</span><span class="dv" id="profile-detail-email">—</span></div>
+          <div class="detail-row"><span class="dl">Session status</span><span class="dv" style="color:var(--green);">● Active</span></div>
+        </div>
+        <div class="card">
+          <h3>Session</h3>
+          <p style="color:var(--text-dim); font-size:13px; margin-bottom:16px;">End your current session and return to the sign-in screen.</p>
+          <button class="btn btn-danger" id="logout-btn-2">Log out</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- FLOATING MARQUEE BAR -->
+<!-- FLOATING HOME BUTTON -->
+<button class="fab-home" id="back-home-btn"><span class="fab-ic">⌂</span> Back to Home</button>
+
+<div class="float-bar" id="float-bar" style="display:none;">
+  <span class="marquee-text">FEDERAL AIRPORT AUTHORITY OF NIGERIA .......</span>
+</div>
+
+<!-- ================= RESCHEDULE MODAL ================= -->
+<div class="modal-overlay" id="reschedule-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <h3 id="modal-title">Reschedule flight</h3>
+    <p class="sub" id="modal-sub">Choose a new available slot for this route.</p>
+    <div id="slot-list"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="modal-confirm" disabled>Confirm reschedule</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"><span class="dot" aria-hidden="true"></span><span id="toast-msg"></span></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- REAL AIRLINE + STATE DATA (researched) ----------
+  const STATES = [
+    ["Abuja","FCT"],["Umuahia","Abia"],["Yola","Adamawa"],["Uyo","Akwa Ibom"],["Awka","Anambra"],
+    ["Bauchi","Bauchi"],["Yenagoa","Bayelsa"],["Makurdi","Benue"],["Maiduguri","Borno"],["Calabar","Cross River"],
+    ["Asaba","Delta"],["Abakaliki","Ebonyi"],["Benin City","Edo"],["Ado-Ekiti","Ekiti"],["Enugu","Enugu"],
+    ["Gombe","Gombe"],["Owerri","Imo"],["Dutse","Jigawa"],["Kaduna","Kaduna"],["Kano","Kano"],
+    ["Katsina","Katsina"],["Birnin Kebbi","Kebbi"],["Lokoja","Kogi"],["Ilorin","Kwara"],["Lagos","Lagos"],
+    ["Lafia","Nasarawa"],["Minna","Niger"],["Abeokuta","Ogun"],["Akure","Ondo"],["Osogbo","Osun"],
+    ["Ibadan","Oyo"],["Jos","Plateau"],["Port Harcourt","Rivers"],["Sokoto","Sokoto"],["Jalingo","Taraba"],
+    ["Damaturu","Yobe"],["Gusau","Zamfara"]
+  ];
+  const cityLabel = c => { const s = STATES.find(x=>x[0]===c); return s ? `${s[0]} (${s[1]})` : c; };
+
+  const AIRLINES = {
+    "Air Peace": { code:"P4", cities:["Lagos","Abuja","Enugu","Port Harcourt","Kano","Owerri","Calabar","Benin City","Ilorin","Sokoto","Asaba","Uyo","Akure","Yola","Maiduguri","Jos","Kaduna","Katsina","Gombe","Ibadan","Minna","Bauchi"] },
+    "Ibom Air": { code:"QI", cities:["Lagos","Abuja","Enugu","Port Harcourt","Calabar","Uyo"] },
+    "United Nigeria": { code:"UN", cities:["Lagos","Abuja","Enugu","Owerri","Port Harcourt","Calabar","Kano","Asaba","Benin City"] },
+    "Enugu Air": { code:"E6", cities:["Enugu","Lagos","Abuja","Port Harcourt","Owerri"] }
+  };
+  const AIRLINE_NAMES = Object.keys(AIRLINES);
+
+  let flights = [];
+  let bookings = [];
+  let lastResult = null;
+  let rescheduleTarget = null; // {type:'flight'|'booking', id}
+  let selectedSlot = null;
+
+  function hashStr(s){ let h=0; for(let i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return h; }
+
+  const busyRoutes = ["Lagos-Enugu","Enugu-Lagos","Abuja-Lagos","Lagos-Abuja","Lagos-Port Harcourt","Port Harcourt-Lagos"];
+  const weatherCities = ["Jos","Calabar","Yola","Maiduguri"];
+
+  function predict(input){
+    const key = `${input.airline}|${input.flightno}|${input.from}|${input.to}|${input.date}|${input.time}`;
+    let score = hashStr(key) % 100;
+    const reasons = [];
+    const routeKey = `${input.from}-${input.to}`;
+    if(busyRoutes.includes(routeKey)){ score += 12; reasons.push(`${input.from}–${input.to} is a high-traffic route with tighter runway slot windows.`); }
+    if(weatherCities.includes(input.from) || weatherCities.includes(input.to)){ score += 8; reasons.push("Origin/destination has seasonal weather variability affecting visibility."); }
+    const hour = parseInt(input.time.split(":")[0], 10);
+    if(hour < 6 || hour > 20){ score += 6; reasons.push("Off-peak scheduled time increases turnaround and crew-readiness risk."); }
+    score = Math.max(0, Math.min(100, score));
+
+    let status, delayMins = 0;
+    if(score >= 85){ status = "cancelled"; reasons.push("Combined risk factors exceed the cancellation threshold for this route today."); }
+    else if(score >= 40){ status = "delayed"; delayMins = 15 + Math.round((score-40) * 2.8); reasons.push(`Model estimates a ${delayMins}-minute delay window based on similar historical flights.`); }
+    else { status = "ontime"; reasons.push("No significant risk factors detected for this flight."); }
+    if(reasons.length < 2){ reasons.push("Aircraft turnaround and gate availability at ENU are within normal range."); }
+    return { score, status, delayMins, reasons };
+  }
+
+  function fmtDelay(mins){ if(mins<60) return `${mins} min`; const h=Math.floor(mins/60), m=mins%60; return m?`${h}h ${m}m`:`${h}h`; }
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.style.display = 'flex';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(()=>{ t.style.display='none'; }, 3200);
+  }
+
+  function maskEmail(email){
+    const [local, domain] = email.split('@');
+    if(!domain) return '••••••';
+    const visible = local.slice(0,2);
+    return `${visible}${'•'.repeat(Math.max(3,local.length-2))}@${domain}`;
+  }
+
+  // ---------- AUTH ----------
+  const DEMO_USER = { name: "Naomi Chukwu", email: "naomi.ops@aiia-enu.ng", passcode: "AIIA2026#" };
+  const registeredUsers = [];
+  let currentUser = null;
+
+  function switchAuth(name){
+    document.querySelectorAll('.auth-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('auth-' + name).classList.add('active');
+  }
+  document.getElementById('show-signup-btn').addEventListener('click', ()=> switchAuth('signup'));
+  document.getElementById('show-signin-btn').addEventListener('click', ()=> switchAuth('signin'));
+  document.getElementById('show-forgot-btn').addEventListener('click', ()=> switchAuth('forgot'));
+  document.getElementById('show-signin-btn-2').addEventListener('click', ()=> switchAuth('signin'));
+
+  document.getElementById('forgot-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const email = document.getElementById('forgot-email').value.trim();
+    const err = document.getElementById('forgot-error');
+    const ok = document.getElementById('forgot-success');
+    if(!email || !email.includes('@')){ err.style.display='block'; ok.style.display='none'; return; }
+    err.style.display='none';
+    ok.style.display='block';
+    this.reset();
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const pass = document.getElementById('signup-pass').value;
+    const err = document.getElementById('signup-error');
+    const ok = document.getElementById('signup-success');
+    if(!name || !email || pass.length < 4){ err.style.display='block'; ok.style.display='none'; return; }
+    err.style.display='none';
+    registeredUsers.push({ name, email, passcode: pass });
+    ok.style.display='block';
+    this.reset();
+  });
+
+  function findUser(name, email, pass){
+    if(name.toLowerCase()===DEMO_USER.name.toLowerCase() && email.toLowerCase()===DEMO_USER.email.toLowerCase() && pass===DEMO_USER.passcode){
+      return DEMO_USER;
+    }
+    return registeredUsers.find(u => u.name.toLowerCase()===name.toLowerCase() && u.email.toLowerCase()===email.toLowerCase() && u.passcode===pass);
+  }
+
+  document.getElementById('login-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('login-name').value.trim();
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const err = document.getElementById('login-error');
+
+    const user = findUser(name, email, pass);
+    if(!user){ err.style.display='block'; return; }
+    err.style.display='none';
+
+    currentUser = user;
+    const initials = user.name.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    document.getElementById('user-avatar').textContent = initials || 'U';
+    document.getElementById('profile-avatar').textContent = initials || 'U';
+    document.getElementById('user-name').textContent = user.name;
+    document.getElementById('profile-name').textContent = user.name;
+    document.getElementById('profile-detail-name').textContent = user.name;
+    document.getElementById('profile-detail-email').textContent = maskEmail(user.email);
+    document.getElementById('home-username').textContent = `, ${user.name.split(' ')[0]}.`;
+
+    document.getElementById('screen-login').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('float-bar').style.display = 'flex';
+    renderAll();
+  });
+
+  function doLogout(){
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('float-bar').style.display = 'none';
+    document.getElementById('screen-login').style.display = 'flex';
+    document.getElementById('login-form').reset();
+    document.getElementById('dropdown-menu').classList.remove('open');
+    document.getElementById('menu-toggle').classList.remove('open');
+  }
+  document.getElementById('logout-btn').addEventListener('click', function(e){ e.preventDefault(); doLogout(); });
+  document.getElementById('logout-btn-2').addEventListener('click', doLogout);
+
+  // ---------- DROPDOWN MENU ----------
+  const menuToggle = document.getElementById('menu-toggle');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+  menuToggle.addEventListener('click', function(){
+    const isOpen = dropdownMenu.classList.toggle('open');
+    menuToggle.classList.toggle('open', isOpen);
+    menuToggle.setAttribute('aria-expanded', isOpen);
+  });
+  document.addEventListener('click', function(e){
+    if(!dropdownMenu.contains(e.target) && !menuToggle.contains(e.target)){
+      dropdownMenu.classList.remove('open'); menuToggle.classList.remove('open'); menuToggle.setAttribute('aria-expanded','false');
+    }
+  });
+
+  // ---------- NAV ----------
+  const navItems = document.querySelectorAll('.nav-item[data-panel]');
+  const panels = document.querySelectorAll('.panel');
+  function showPanel(name){
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.panel === name));
+    panels.forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+    dropdownMenu.classList.remove('open'); menuToggle.classList.remove('open');
+    document.getElementById('back-home-btn').style.display = (name === 'home') ? 'none' : 'flex';
+    document.getElementById('main-content').scrollTo({top:0, behavior:'smooth'});
+  }
+  navItems.forEach(item=>{ item.addEventListener('click', function(e){ e.preventDefault(); showPanel(this.dataset.panel); }); });
+  document.getElementById('back-home-btn').addEventListener('click', ()=> showPanel('home'));
+
+  // ---------- POPULATE AIRLINE SELECTS + DEPENDENT CITY SELECTS ----------
+  function fillAirlineSelect(sel){
+    AIRLINE_NAMES.forEach(a=>{ const o=document.createElement('option'); o.textContent=a; sel.appendChild(o); });
+  }
+  fillAirlineSelect(document.getElementById('f-airline'));
+  fillAirlineSelect(document.getElementById('b-airline'));
+
+  function fillCitySelects(airlineName, fromSel, toSel){
+    fromSel.innerHTML = ''; toSel.innerHTML = '';
+    if(!airlineName){
+      fromSel.innerHTML = '<option value="">Select airline first</option>';
+      toSel.innerHTML = '<option value="">Select airline first</option>';
+      return;
+    }
+    const cities = AIRLINES[airlineName].cities;
+    const opt = () => { const o=document.createElement('option'); o.value=''; o.textContent='Select state'; return o; };
+    fromSel.appendChild(opt()); toSel.appendChild(opt());
+    cities.forEach(c=>{
+      const o1=document.createElement('option'); o1.value=c; o1.textContent=cityLabel(c); fromSel.appendChild(o1);
+      const o2=document.createElement('option'); o2.value=c; o2.textContent=cityLabel(c); toSel.appendChild(o2);
+    });
+  }
+  document.getElementById('f-airline').addEventListener('change', function(){ fillCitySelects(this.value, document.getElementById('f-from'), document.getElementById('f-to')); });
+  document.getElementById('b-airline').addEventListener('change', function(){ fillCitySelects(this.value, document.getElementById('b-from'), document.getElementById('b-to')); });
+
+  // ---------- CHECK FORM ----------
+  document.getElementById('check-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const airline = document.getElementById('f-airline').value;
+    const flightno = document.getElementById('f-flightno').value.trim() || autoFlightNo(airline);
+    const from = document.getElementById('f-from').value, to = document.getElementById('f-to').value;
+    const date = document.getElementById('f-date').value;
+    const time = document.getElementById('f-time').value;
+    const err = document.getElementById('check-error');
+    if(!airline || !from || !to || !date || !time || from === to){ err.style.display='block'; return; }
+    err.style.display='none';
+    const result = predict({airline, flightno, from, to, date, time});
+    lastResult = { airline, flightno, from, to, date, time, ...result };
+    renderResult(lastResult);
+  });
+
+  function autoFlightNo(airline){
+    const code = (AIRLINES[airline] && AIRLINES[airline].code) || "FL";
+    return `${code} ${100 + (hashStr(airline+Date.now()) % 800)}`;
+  }
+  function badgeClass(status){ return status==='ontime'?'badge-ontime':status==='delayed'?'badge-delayed':'badge-cancelled'; }
+  function badgeLabel(status){ return status==='ontime'?'● ON TIME':status==='delayed'?'● DELAY RISK':'● CANCELLED'; }
+
+  function renderResult(r){
+    const wrap = document.getElementById('check-result');
+    wrap.style.display = 'block';
+    document.getElementById('result-badge-wrap').innerHTML = `<div class="result-badge ${badgeClass(r.status)}">${badgeLabel(r.status)}</div>`;
+    let metaHtml = `
+      <div><div class="v">${r.airline}</div><div class="l">Airline</div></div>
+      <div><div class="v">${r.flightno}</div><div class="l">Flight No.</div></div>
+      <div><div class="v">${cityLabel(r.from)} → ${cityLabel(r.to)}</div><div class="l">Route</div></div>
+      <div><div class="v">${r.date || '—'}</div><div class="l">Date</div></div>`;
+    if(r.status === 'delayed'){ metaHtml += `<div><div class="v" style="color:var(--amber)">${fmtDelay(r.delayMins)}</div><div class="l">Est. delay</div></div>`; }
+    document.getElementById('result-meta').innerHTML = metaHtml;
+    document.getElementById('result-reasons').innerHTML = r.reasons.map(x=>`<li>${x}</li>`).join('');
+    const reBtn = document.getElementById('reschedule-inline-btn');
+    reBtn.style.display = (r.status==='delayed'||r.status==='cancelled') ? 'inline-flex' : 'none';
+    wrap.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  document.getElementById('save-flight-btn').addEventListener('click', function(){
+    if(!lastResult) return;
+    flights.unshift({ id:'fl_'+Date.now(), ...lastResult });
+    toast('Flight added to My Flights');
+    renderAll();
+  });
+  document.getElementById('reschedule-inline-btn').addEventListener('click', function(){
+    if(!lastResult) return;
+    if(!flights.find(f => f.flightno===lastResult.flightno && f.date===lastResult.date)){
+      flights.unshift({ id:'fl_'+Date.now(), ...lastResult }); renderAll();
+    }
+    const target = flights.find(f => f.flightno===lastResult.flightno && f.date===lastResult.date);
+    openReschedule('flight', target.id);
+  });
+
+  // ---------- BOOK FORM ----------
+  document.getElementById('book-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const airline = document.getElementById('b-airline').value;
+    const passenger = document.getElementById('b-passenger').value.trim();
+    const from = document.getElementById('b-from').value, to = document.getElementById('b-to').value;
+    const date = document.getElementById('b-date').value;
+    const time = document.getElementById('b-time').value;
+    const err = document.getElementById('book-error');
+    if(!airline || !passenger || !from || !to || !date || !time || from === to){ err.style.display='block'; return; }
+    err.style.display='none';
+
+    const flightno = autoFlightNo(airline);
+    const ref = 'FAAN-' + hashStr(passenger+Date.now()).toString(36).toUpperCase().slice(0,6);
+    const booking = { id:'bk_'+Date.now(), ref, airline, passenger, flightno, from, to, date, time, status:'booked', delayMins:0 };
+    bookings.unshift(booking);
+
+    document.getElementById('booking-result').style.display = 'block';
+    document.getElementById('booking-meta').innerHTML = `
+      <div><div class="v">${ref}</div><div class="l">Booking ref.</div></div>
+      <div><div class="v">${airline}</div><div class="l">Airline</div></div>
+      <div><div class="v">${flightno}</div><div class="l">Flight no.</div></div>
+      <div><div class="v">${cityLabel(from)} → ${cityLabel(to)}</div><div class="l">Route</div></div>
+      <div><div class="v">${date}, ${time}</div><div class="l">Departure</div></div>`;
+    document.getElementById('booking-result').scrollIntoView({behavior:'smooth', block:'nearest'});
+    toast('Flight booked successfully');
+    renderAll();
+  });
+
+  // ---------- STRIPS / LISTS ----------
+  function strip(f, withActions, kind){
+    const st = f.status;
+    const label = st==='ontime'?'ON TIME':st==='delayed'?`DELAYED · ${fmtDelay(f.delayMins)}`:st==='cancelled'?'CANCELLED':st==='booked'?`BOOKED · ${f.ref||''}`:'RESCHEDULED';
+    const actions = withActions ? `
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        ${(st==='delayed'||st==='cancelled'||st==='booked') ? `<button class="btn btn-ghost btn-sm" data-reschedule="${kind}:${f.id}">Reschedule</button>` : ''}
+        <button class="btn btn-ghost btn-sm" data-remove="${kind}:${f.id}">Remove</button>
+      </div>` : '';
+    return `
+      <div class="strip ${st}">
+        <div class="flightno">${f.flightno}</div>
+        <div class="route">${f.airline} · <b>${cityLabel(f.from)} → ${cityLabel(f.to)}</b></div>
+        <div class="route">${f.date||''} ${f.time||''}</div>
+        <div class="status status-${st}">${label}</div>
+        ${actions}
+      </div>`;
+  }
+
+  function renderAll(){
+    document.getElementById('stat-total').textContent = flights.length;
+    document.getElementById('stat-ontime').textContent = flights.filter(f=>f.status==='ontime').length;
+    document.getElementById('stat-delayed').textContent = flights.filter(f=>f.status==='delayed').length;
+    document.getElementById('stat-bookings').textContent = bookings.length;
+
+    const recent = flights.slice(0,4);
+    document.getElementById('recent-strips').innerHTML = recent.map(f=>strip(f,false,'flight')).join('');
+    document.getElementById('overview-empty').style.display = flights.length ? 'none' : 'block';
+
+    document.getElementById('myflights-strips').innerHTML = flights.map(f=>strip(f,true,'flight')).join('');
+    document.getElementById('myflights-empty').style.display = flights.length ? 'none' : 'block';
+
+    document.getElementById('bookings-strips').innerHTML = bookings.map(f=>strip(f,true,'booking')).join('');
+    document.getElementById('bookings-empty').style.display = bookings.length ? 'none' : 'block';
+
+    bindDynamicButtons();
+  }
+
+  function bindDynamicButtons(){
+    document.querySelectorAll('[data-reschedule]').forEach(btn=>{
+      btn.addEventListener('click', function(){ const [kind,id] = this.dataset.reschedule.split(':'); openReschedule(kind, id); });
+    });
+    document.querySelectorAll('[data-remove]').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        const [kind,id] = this.dataset.remove.split(':');
+        if(kind==='flight'){ flights = flights.filter(f=>f.id!==id); } else { bookings = bookings.filter(f=>f.id!==id); }
+        renderAll();
+      });
+    });
+  }
+
+  // ---------- RESCHEDULE MODAL ----------
+  function generateSlots(f){
+    const base = f.date ? new Date(f.date+'T'+(f.time||'09:00')) : new Date();
+    const slots = [];
+    for(let i=1;i<=3;i++){
+      const d = new Date(base.getTime()); d.setDate(d.getDate()+i);
+      const hour = 6 + (hashStr(f.flightno+i) % 12);
+      d.setHours(hour, (i*15)%60, 0, 0);
+      slots.push(d);
+    }
+    return slots;
+  }
+  function openReschedule(kind, id){
+    const list = kind==='flight' ? flights : bookings;
+    const f = list.find(x=>x.id===id);
+    if(!f) return;
+    rescheduleTarget = {kind, id}; selectedSlot = null;
+    document.getElementById('modal-sub').textContent = `${f.airline} ${f.flightno} · ${cityLabel(f.from)} → ${cityLabel(f.to)}`;
+    const slots = generateSlots(f);
+    document.getElementById('slot-list').innerHTML = slots.map((d,i)=>{
+      const dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+      const timeStr = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="slot-option" data-slot="${i}"><div><div class="t">${timeStr}</div><div class="d">${dateStr}</div></div><div class="d">Slot ${i+1}</div></div>`;
+    }).join('');
+    window._slots = slots;
+    document.querySelectorAll('.slot-option').forEach(el=>{
+      el.addEventListener('click', function(){
+        document.querySelectorAll('.slot-option').forEach(x=>x.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedSlot = window._slots[parseInt(this.dataset.slot,10)];
+        document.getElementById('modal-confirm').disabled = false;
+      });
+    });
+    document.getElementById('reschedule-modal').style.display = 'flex';
+  }
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('reschedule-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+  function closeModal(){ document.getElementById('reschedule-modal').style.display='none'; document.getElementById('modal-confirm').disabled=true; }
+  document.getElementById('modal-confirm').addEventListener('click', function(){
+    if(!rescheduleTarget || !selectedSlot) return;
+    const list = rescheduleTarget.kind==='flight' ? flights : bookings;
+    const f = list.find(x=>x.id===rescheduleTarget.id);
+    if(f){ f.status='rescheduled'; f.date=selectedSlot.toISOString().slice(0,10); f.time=selectedSlot.toTimeString().slice(0,5); f.delayMins=0; }
+    closeModal(); toast('Rescheduled successfully'); renderAll();
+  });
+
+  // ---------- CAROUSEL (real photos + airline cards) ----------
+  const FP = "https://commons.wikimedia.org/wiki/Special:FilePath/";
+  const photoItems = [
+    { tag:"Departures", img: FP+"Boeing_747_Runway_24R_Takeoff-LAX.jpg", newsKey:"departure" },
+    { tag:"Arrivals", img: FP+"Airplane_landing_at_zurich_airport.jpg", newsKey:"arrival" },
+    { tag:"Runway", img: FP+"Kempegowda_International_Airport_Runway,_Bengaluru_(Ank_Kumar,_Infosys)_04.jpg", newsKey:"runway" },
+    { tag:"Control Tower", img: FP+"KGSO_Air_Traffic_Control_Tower_and_TRACON.jpg", newsKey:"tower" },
+    { tag:"Ground Crew", img: FP+"Aircraft_marshaller_TN_02.jpg", newsKey:"ground" },
+    { tag:"Terminal", img: FP+"Changi_Airport_T4_Departure_Hall_interior_(230820).jpg", newsKey:"terminal" }
+  ];
+  const newsByCategory = {
+    departure: ["UN 402 departed ENU at 09:15, on schedule.", "Air Peace AP 118 departed ENU at 11:40 for Lagos.", "Enugu Air E6 210 wheels-up from ENU at 14:05."],
+    arrival: ["QI 156 landed at ENU at 13:52, 6 min early.", "Ibom Air QI 204 touched down at ENU at 16:20.", "United Nigeria UN 118 arriving ENU at 18:10, on time."],
+    runway: ["Runway 06/24 reports normal surface conditions.", "No runway incursions reported in the last 24 hours.", "Visibility at ENU runway: clear, 10km+."],
+    tower: ["Tower confirms normal traffic flow, no holding patterns.", "ATC reports light traffic — average 2 movements per hour.", "Control tower: all frequencies operating normally."],
+    ground: ["Ramp crew report average turnaround of 38 minutes.", "Ground handling operating within normal parameters.", "Baggage handling teams report no delays this morning."],
+    terminal: ["Terminal check-in queues moving smoothly, avg wait 8 min.", "Security screening at Terminal running at normal pace.", "Terminal boards show all ENU flights on schedule."]
+  };
+  function randomNews(key){ const arr = newsByCategory[key]; return arr[Math.floor(Math.random()*arr.length)]; }
+
+  const planeIcon = `<svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#1FA35C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 40 L70 40 L88 30 L70 34 L45 20 L38 22 L52 36 L28 38 L18 32 L12 34 L20 40"/></g></svg>`;
+
+  function renderCarousel(){
+    const track = document.getElementById('carousel-track');
+    track.innerHTML = photoItems.map(p => `
+      <div class="photo-card" data-photo="${p.newsKey}">
+        <img src="${p.img}" alt="${p.tag}" loading="lazy">
+        <div class="pc-overlay"><div class="pc-tag">${p.tag}</div><div class="pc-news">${randomNews(p.newsKey)}</div></div>
+      </div>`).join('');
+
+    document.querySelectorAll('.photo-card').forEach(card=>{
+      card.addEventListener('click', function(){
+        showPanel('info-' + this.dataset.photo);
+      });
+    });
+  }
+  renderCarousel();
+
+  const infoTagClass = { departure:'tag-takeoff', arrival:'tag-landing', runway:'tag-comfort', tower:'tag-comfort', ground:'tag-comfort', terminal:'tag-landing' };
+  Object.keys(newsByCategory).forEach(key=>{
+    const list = document.getElementById('info-' + key + '-list');
+    if(!list) return;
+    list.innerHTML = newsByCategory[key].map(msg => `<div class="headline-item"><span class="tag ${infoTagClass[key]||'tag-comfort'}">UPDATE</span><span class="htext">${msg}</span></div>`).join('');
+  });
+
+  const track = document.getElementById('carousel-track');
+
+  let carouselAutoTimer = setInterval(()=>{
+    if(track.scrollLeft + track.clientWidth >= track.scrollWidth - 10){ track.scrollTo({left:0, behavior:'smooth'}); }
+    else { track.scrollBy({left:320, behavior:'smooth'}); }
+  }, 30000);
+  // pausing auto-advance briefly after manual interaction so it doesn't fight the user
+  ['pointerdown','wheel','touchstart'].forEach(evt=>{
+    track.addEventListener(evt, ()=>{
+      clearInterval(carouselAutoTimer);
+      clearTimeout(track._resumeTimer);
+      track._resumeTimer = setTimeout(()=>{
+        carouselAutoTimer = setInterval(()=>{
+          if(track.scrollLeft + track.clientWidth >= track.scrollWidth - 10){ track.scrollTo({left:0, behavior:'smooth'}); }
+          else { track.scrollBy({left:320, behavior:'smooth'}); }
+        }, 30000);
+      }, 30000);
+    }, {passive:true});
+  });
+
+  // ---------- FLASH ROTATOR + HEADLINES ----------
+  const flashMessages = [
+    "Flight AP 118 took off successfully from ENU — climb-out normal.",
+    "Ibom Air QI 156 landed safely at ENU, 6 minutes ahead of schedule.",
+    "Cabin comfort ratings from this morning's United Nigeria flights: smooth, on-time boarding.",
+    "Enugu Air E6 233 cleared for takeoff — normal runway conditions.",
+    "United Nigeria UN 118 completed a smooth landing, no turbulence reported."
+  ];
+  let flashIdx = 0;
+  document.getElementById('flash-rotator').style.transition = 'opacity 0.25s ease';
+  setInterval(()=>{
+    flashIdx = (flashIdx+1) % flashMessages.length;
+    const el = document.getElementById('flash-rotator');
+    el.style.opacity = 0;
+    setTimeout(()=>{ el.textContent = flashMessages[flashIdx]; el.style.opacity = 1; document.getElementById('flash-time').textContent = 'just now'; }, 250);
+  }, 6000);
+
+  document.getElementById('headline-list').innerHTML = `
+    <div class="headline-item"><span class="tag tag-takeoff">TAKEOFF</span><span class="htext"><strong>United Nigeria UN 402</strong> departed ENU on schedule, bound for Lagos.</span></div>
+    <div class="headline-item"><span class="tag tag-landing">LANDING</span><span class="htext"><strong>Ibom Air QI 156</strong> touched down safely at ENU from Abuja, 6 minutes ahead of schedule.</span></div>
+    <div class="headline-item"><span class="tag tag-comfort">COMFORT</span><span class="htext">Passengers on <strong>Air Peace AP 118</strong> reported smooth cabin conditions and on-time boarding this morning.</span></div>
+    <div class="headline-item"><span class="tag tag-landing">LANDING</span><span class="htext"><strong>Enugu Air E6 210</strong> landed at ENU from Port Harcourt with no reported turbulence.</span></div>`;
+
+  // ---------- AIRLINES / STATES PANEL ----------
+  document.getElementById('airlines-strips').innerHTML = AIRLINE_NAMES.map(a => `
+    <div class="strip ontime"><div class="flightno">${a}</div><div class="route">Domestic carrier · ${AIRLINES[a].code}</div><div class="status status-ontime">ACTIVE AT ENU</div><div></div><div></div></div>
+  `).join('');
+  document.getElementById('airline-routes-list').innerHTML = AIRLINE_NAMES.map(a => `
+    <div class="detail-row"><span class="dl">${a}</span><span class="dv" style="text-align:right; max-width:60%;">${AIRLINES[a].cities.map(cityLabel).join(', ')}</span></div>
+  `).join('');
+
+  // default date
+  document.getElementById('f-date').valueAsDate = new Date();
+  document.getElementById('b-date').valueAsDate = new Date();
+
+})();
+
+</script>
+
+</body>
+</html>
